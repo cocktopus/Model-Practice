@@ -51,11 +51,11 @@ namespace Model_Practice
         float modelRotationSpeed = 0.0f;
 
         Vector3 cameraLookAt = Vector3.Zero;
-        float cameraZ = 250.0f;
-        float cameraY = 250.0f;
-        float cameraX = 250.0f;
+        float cameraZ = 1.0f;
+        float cameraY = 1.0f;
+        float cameraX = 1.0f;
 
-        Vector3 cameraPosition = new Vector3(0.0f, 50.0f, 1000.0f);
+        Vector3 cameraPosition = new Vector3(0.0f, 0.0f, 50.0f);
 
         protected override void LoadContent()
         {
@@ -104,7 +104,7 @@ namespace Model_Practice
             Matrix[] transforms = new Matrix[sword.Bones.Count];
             sword.CopyAbsoluteBoneTransformsTo(transforms);
 
-            foreach (ModelMesh mesh in sword.Meshes)
+            foreach (ModelMesh mesh in landscape.Meshes)
             {
                 foreach (BasicEffect effect in mesh.Effects)
                 {
@@ -113,8 +113,9 @@ namespace Model_Practice
                         Matrix.CreateRotationY(modelRotation) *
                         Matrix.CreateTranslation(modelPosition);
                     effect.View = Matrix.CreateLookAt(cameraPosition, cameraLookAt, Vector3.Up);
+                    //effect.View = Matrix.CreateLookAt(cameraPosition, cameraLookAt, Vector3.Up);
                     effect.Projection = Matrix.CreatePerspectiveFieldOfView(
-                        MathHelper.ToRadians(33.0f), aspectRatio,
+                        MathHelper.ToRadians(45.0f), aspectRatio,
                         1.0f, 10000.0f);
 
                 }
@@ -150,7 +151,6 @@ namespace Model_Practice
         {
             KeyboardState newState = Keyboard.GetState();
 
-            // Is the SPACE key down?
             if (newState.IsKeyDown(Keys.Q))
             {
                 modelRotationSpeed += 0.01f;
@@ -175,10 +175,12 @@ namespace Model_Practice
             if (newState.IsKeyDown(Keys.A))
             {
                 cameraPosition.X += cameraX;
+                cameraLookAt.X += cameraX;
             }
             if (newState.IsKeyDown(Keys.D))
             {
                 cameraPosition.X -= cameraX;
+                cameraLookAt.X -= cameraX;
             }
 
             //    // If not down last update, key has just been pressed.
