@@ -44,18 +44,20 @@ namespace Model_Practice
         Model dude;
         Model landscape;
         Model animationtest;
+        Model swordpink;
         float aspectRatio;
 
         Vector3 modelPosition = Vector3.Zero;
         float modelRotation = 0.0f;
         float modelRotationSpeed = 0.0f;
 
-        Vector3 cameraLookAt = Vector3.Zero;
-        float cameraZ = 1.0f;
-        float cameraY = 1.0f;
-        float cameraX = 1.0f;
+        static Vector3 cameraLookAtStart = Vector3.Zero;
+        static Vector3 cameraPositionStart = new Vector3(0.0f, 0.0f, 50.0f);
+        static float cameraSpeed = 1.0f;
+        Vector3 cameraLookAt = cameraLookAtStart;
+        Vector3 cameraPosition = cameraPositionStart;
 
-        Vector3 cameraPosition = new Vector3(0.0f, 0.0f, 50.0f);
+        static float mouseSpeed = 0.1f;
 
         protected override void LoadContent()
         {
@@ -65,6 +67,7 @@ namespace Model_Practice
             dude = Content.Load<Model>("Models\\dude");
             animationtest = Content.Load<Model>("Models\\animationtest");
             sword = Content.Load<Model>("Models\\sword");
+            swordpink = Content.Load<Model>("Models\\swordpink");
 
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
         }
@@ -99,12 +102,12 @@ namespace Model_Practice
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.DarkGray);
 
             Matrix[] transforms = new Matrix[sword.Bones.Count];
             sword.CopyAbsoluteBoneTransformsTo(transforms);
 
-            foreach (ModelMesh mesh in landscape.Meshes)
+            foreach (ModelMesh mesh in swordpink.Meshes)
             {
                 foreach (BasicEffect effect in mesh.Effects)
                 {
@@ -136,12 +139,12 @@ namespace Model_Practice
                 if (newMouse.X != oldMouse.X)
                 {
                     XDiff = newMouse.X - oldMouse.X;
-                    cameraLookAt.X += XDiff;
+                    cameraLookAt.X += XDiff * mouseSpeed;
                 }
                 if (newMouse.Y != oldMouse.Y)
                 {
                     YDiff = newMouse.Y - oldMouse.Y;
-                    cameraLookAt.Y += YDiff;
+                    cameraLookAt.Y += YDiff * mouseSpeed;
                 }
             }
 
@@ -162,40 +165,42 @@ namespace Model_Practice
             // move forward
             if (newState.IsKeyDown(Keys.W))
             {
-                cameraLookAt.Z -= cameraZ;
-                cameraPosition.Z -= cameraZ;
+                cameraLookAt.Z -= cameraSpeed;
+                cameraPosition.Z -= cameraSpeed;
             }
             // move backward
             if (newState.IsKeyDown(Keys.S))
             {
-                cameraLookAt.Z += cameraZ;
-                cameraPosition.Z += cameraZ;
+                cameraLookAt.Z += cameraSpeed;
+                cameraPosition.Z += cameraSpeed;
             }
 
             if (newState.IsKeyDown(Keys.A))
             {
-                cameraPosition.X += cameraX;
-                cameraLookAt.X += cameraX;
+                cameraPosition.X += cameraSpeed;
+                cameraLookAt.X += cameraSpeed;
             }
             if (newState.IsKeyDown(Keys.D))
             {
-                cameraPosition.X -= cameraX;
-                cameraLookAt.X -= cameraX;
+                cameraPosition.X -= cameraSpeed;
+                cameraLookAt.X -= cameraSpeed;
             }
 
-            //    // If not down last update, key has just been pressed.
-            //    if (!oldState.IsKeyDown(Keys.A))
-            //    {
-            //        modelRotationSpeed = modelRotationSpeed + 0.25f;
-            //    }
-            //}
-            //else if (oldState.IsKeyDown(Keys.A))
-            //{
-            //    // Key was down last update, but not down now, so
-            //    // it has just been released.
-            //}
-
-
+            if (newState.IsKeyDown(Keys.Z))
+            {
+                cameraPosition.Y += cameraSpeed;
+                cameraLookAt.Y += cameraSpeed;
+            }
+            if (newState.IsKeyDown(Keys.X))
+            {
+                cameraPosition.Y -= cameraSpeed;
+                cameraLookAt.Y -= cameraSpeed;
+            }
+            if (newState.IsKeyDown(Keys.Enter))
+            {
+                cameraLookAt = cameraLookAtStart;
+                cameraPosition = cameraPositionStart;
+            }
             // Update saved state.
             oldState = newState;
         }
