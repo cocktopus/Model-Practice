@@ -44,18 +44,20 @@ namespace Model_Practice
         Model dude;
         Model landscape;
         Model animationtest;
+        Model swordpink;
         float aspectRatio;
 
         Vector3 modelPosition = Vector3.Zero;
         float modelRotation = 0.0f;
         float modelRotationSpeed = 0.0f;
 
-        Vector3 cameraLookAt = Vector3.Zero;
-        float cameraZ = 250.0f;
-        float cameraY = 250.0f;
-        float cameraX = 250.0f;
+        static Vector3 cameraLookAtStart = Vector3.Zero;
+        static Vector3 cameraPositionStart = new Vector3(0.0f, 0.0f, 50.0f);
+        static float cameraSpeed = 0.5f;
+        Vector3 cameraLookAt = cameraLookAtStart;
+        Vector3 cameraPosition = cameraPositionStart;
 
-        Vector3 cameraPosition = new Vector3(0.0f, 50.0f, 1000.0f);
+        static float mouseSpeed = 0.1f;
 
         protected override void LoadContent()
         {
@@ -65,6 +67,7 @@ namespace Model_Practice
             dude = Content.Load<Model>("Models\\dude");
             animationtest = Content.Load<Model>("Models\\animationtest");
             sword = Content.Load<Model>("Models\\sword");
+            swordpink = Content.Load<Model>("Models\\swordpink");
 
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
         }
@@ -75,7 +78,7 @@ namespace Model_Practice
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
+            
         }
 
         /// <summary>
@@ -94,36 +97,58 @@ namespace Model_Practice
 
             base.Update(gameTime);
         }
-
-
-
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.DarkGray);
+            SpriteBatch spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Matrix[] transforms = new Matrix[sword.Bones.Count];
             sword.CopyAbsoluteBoneTransformsTo(transforms);
 
-            foreach (ModelMesh mesh in sword.Meshes)
+            float spacing = 100.0f;
+            int count = 4;
+            for (int Y = 1; Y <= count; Y++)
             {
-                foreach (BasicEffect effect in mesh.Effects)
+                for (int Z = 1; Z <= count; Z++)
                 {
-                    effect.EnableDefaultLighting();
-                    effect.World = transforms[mesh.ParentBone.Index] *
-                        Matrix.CreateRotationY(modelRotation) *
-                        Matrix.CreateTranslation(modelPosition);
-                    effect.View = Matrix.CreateLookAt(cameraPosition, cameraLookAt, Vector3.Up);
-                    effect.Projection = Matrix.CreatePerspectiveFieldOfView(
-                        MathHelper.ToRadians(33.0f), aspectRatio,
-                        1.0f, 10000.0f);
-
+                    for (int X = 1; X <= count; X++)
+                    {
+                        Vector3 v = new Vector3() { X = X * spacing, Y = Y * spacing, Z = Z * spacing };
+                        foreach (ModelMesh mesh in swordpink.Meshes)
+                        {
+                            foreach (BasicEffect effect in mesh.Effects)
+                            {
+                                effect.EnableDefaultLighting();
+                                effect.World = transforms[mesh.ParentBone.Index] *
+                                    Matrix.CreateRotationY(modelRotation) *
+                                    Matrix.CreateTranslation(modelPosition + v);
+                                effect.View = Matrix.CreateLookAt(cameraPosition, cameraLookAt, Vector3.Up);
+                                effect.Projection = Matrix.CreatePerspectiveFieldOfView(
+                                    MathHelper.ToRadians(45.0f), aspectRatio,
+                                    1.0f, 10000.0f);
+                            }
+                            mesh.Draw();
+                        }
+                    }
                 }
-                mesh.Draw();
-            }
+            }           
+            DrawText("Camera Position " +
+                "(X:" + cameraPosition.X.ToString() + 
+                ",Y:" + cameraPosition.Y.ToString() +
+                ",Z:" + cameraPosition.Z.ToString() + ") -- Camera Look At " +
+                "(X:" + cameraLookAt.X.ToString() + 
+                ",Y:" + cameraLookAt.Y.ToString() + 
+                ",Z:" + cameraLookAt.Z.ToString() + ")");
 
             base.Draw(gameTime);
         }
-
+        private void DrawText(string text)
+        {
+            spriteBatch.Begin();
+            SpriteFont font = Content.Load<SpriteFont>("Verdana");
+            spriteBatch.DrawString(font,text,new Vector2(0.0f,0.0f),Color.White);
+            spriteBatch.End();
+        }
         private void UpdateMouse()
         {
             MouseState newMouse = Mouse.GetState();
@@ -135,12 +160,12 @@ namespace Model_Practice
                 if (newMouse.X != oldMouse.X)
                 {
                     XDiff = newMouse.X - oldMouse.X;
-                    cameraLookAt.X += XDiff;
+                    cameraLookAt.X += XDiff * mouseSpeed;
                 }
                 if (newMouse.Y != oldMouse.Y)
                 {
                     YDiff = newMouse.Y - oldMouse.Y;
-                    cameraLookAt.Y += YDiff;
+                    cameraLookAt.Y += YDiff * mouseSpeed;
                 }
             }
 
@@ -150,7 +175,6 @@ namespace Model_Practice
         {
             KeyboardState newState = Keyboard.GetState();
 
-            // Is the SPACE key down?
             if (newState.IsKeyDown(Keys.Q))
             {
                 modelRotationSpeed += 0.01f;
@@ -159,41 +183,53 @@ namespace Model_Practice
             {
                 modelRotationSpeed -= 0.01f;
             }
+
             // move forward
             if (newState.IsKeyDown(Keys.W))
             {
-                cameraLookAt.Z -= cameraZ;
-                cameraPosition.Z -= cameraZ;
+                //cameraLookAt.Z -= cameraSpeed;
+                //cameraPosition.Z -= cameraSpeed;
+                Vector3 blah = cameraPosition - cameraLookAt;
+                float slope = blah.X / blah.Z;
+                cameraPosition += blah;
+                cameraLookAt += blah;
             }
             // move backward
             if (newState.IsKeyDown(Keys.S))
             {
-                cameraLookAt.Z += cameraZ;
-                cameraPosition.Z += cameraZ;
+                //cameraLookAt.Z += cameraSpeed;
+                //cameraPosition.Z += cameraSpeed;
+                Vector3 blah = cameraPosition - cameraLookAt;
+                cameraPosition -= blah;
+                cameraLookAt -= blah;
             }
 
             if (newState.IsKeyDown(Keys.A))
             {
-                cameraPosition.X += cameraX;
+                cameraPosition.X += cameraSpeed;
+                cameraLookAt.X += cameraSpeed;
             }
             if (newState.IsKeyDown(Keys.D))
             {
-                cameraPosition.X -= cameraX;
+                cameraPosition.X -= cameraSpeed;
+                cameraLookAt.X -= cameraSpeed;
             }
 
-            //    // If not down last update, key has just been pressed.
-            //    if (!oldState.IsKeyDown(Keys.A))
-            //    {
-            //        modelRotationSpeed = modelRotationSpeed + 0.25f;
-            //    }
-            //}
-            //else if (oldState.IsKeyDown(Keys.A))
-            //{
-            //    // Key was down last update, but not down now, so
-            //    // it has just been released.
-            //}
-
-
+            if (newState.IsKeyDown(Keys.Z))
+            {
+                cameraPosition.Y += cameraSpeed;
+                cameraLookAt.Y += cameraSpeed;
+            }
+            if (newState.IsKeyDown(Keys.X))
+            {
+                cameraPosition.Y -= cameraSpeed;
+                cameraLookAt.Y -= cameraSpeed;
+            }
+            if (newState.IsKeyDown(Keys.Enter))
+            {
+                cameraLookAt = cameraLookAtStart;
+                cameraPosition = cameraPositionStart;
+            }
             // Update saved state.
             oldState = newState;
         }
